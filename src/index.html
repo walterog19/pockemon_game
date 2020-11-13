@@ -8,17 +8,11 @@
   </head>
   <body>
     <section id="arena">
-      <div class="column" >
-       
-      </div>
-      <div class="column">
-        
-      </div>
+      <div class="column"></div>
+      <div class="column"></div>
     </section>
     <section id="indicator">
-      <div class="column">
-        <div class="arrow"></div>
-      </div>
+      <div class="column"></div>
       <div class="column"></div>
     </section>
     <section id="panel">
@@ -44,144 +38,113 @@
       proposes
     </p>
 
-    <script src="utils.js">   </script>
-    <script src="state.js">   </script>
+    <script src="utils.js"></script>
+    <script src="state.js"></script>
+    <script src="pockemon.js"></script>
 
-    <script>
-      function choose(pokemon={} ){
-        const {
-          name="",
-          health:{
-            current=0,
-            initial=0,
-
-          },
-          types=[],
-          artwork="",
-
-        } = pokemon;
-
-
-        const statusContainer = document.createElement("div");
-        statusContainer.className="status";
-        statusContainer.innerHTML= `div class="info">
-            <p class="name">${name}</p>
-          </div>
-          <ul class="types">
-            ${types.map((type)=>`<li class="button ${type.name}">${type.name}</li>`).join("")}
-          </ul>
-          <div class="meter">
-            <span class="bar green" style="width: 100%"></span>
-          </div>
-          <div class="health">${health.current}/${health.initial}</div>`;
-
-          const pokemonContainer=document.createElement("div");
-          pokemonContainer.className="pokemon";
-          pokemonContainer.innerHTML=`
-            <img src = "${artwork}"/>
-           `;
-
-           return [statusContainer,pokemonContainer];
-
-      }
-    </script>
     <script>
       //setup
 
-      function setup(){
-        const {pokemons=[] }=state;
-        const arena  = document.getElementById("arena");  
+      function setup() {
+        const { pokemons = [] } = state;
+        const arena = document.getElementById("arena");
         const columns = arena.getElementsByClassName("column");
 
-        pokemons.forEach((pokemon,index) => {
-        const container=    columns[index];
+        pokemons.forEach((pokemon, index) => {
+          const container = columns[index];
 
-        const [statusContainer,pokemonContainer]= choose(pokemon);
-        if (index===0){
-          container.appendChild(statusContainer);
-          container.appendChild(pokemonContainer);
-
-        }else{
-          container.appendChild(pokemonContainer);
-          container.appendChild(statusContainer);
-          
-        }
-        const [bar]  = container.getElementsByClassName("bar");  
-        const [health]  = container.getElementsByClassName("health");   
-        pokemon._ui.container=container;
-        pokemon._ui.bar=bar;
-        pokemon._ui.health=health;
-          
+          const [statusContainer, pokemonContainer] = choose(pokemon);
+          if (index === 0) {
+            container.appendChild(statusContainer);
+            container.appendChild(pokemonContainer);
+          } else {
+            container.appendChild(pokemonContainer);
+            container.appendChild(statusContainer);
+          }
+          const [bar] = container.getElementsByClassName("bar");
+          const [health] = container.getElementsByClassName("health");
+          pokemon._ui.container = container;
+          pokemon._ui.bar = bar;
+          pokemon._ui.health = health;
         });
+      }
+
+      function render() {
+        const { pokemons = [], position = 0 } = state;
+        const indicator = document.getElementById("indicator");
+        const columns =   indicator.getElementsByClassName("column");
         
+
+        Array.from(columns).forEach((column, index) => {
+          if (position == index) {
+            column.innerHTML = '<div class="arrow"></div>';
+          } else {
+            column.innerHTML = "";
+          }
+        });
+
+        const message = "What attack do you want to use?";
+        const [dialogContainer, movesContainer] = controls(
+          pokemons[position],
+          message
+        );
+        const panel = document.getElementById("panel");
+        const [left, right] = panel.children;
+
+        if (position === 0) {
+          left.replaceChildren(dialogContainer);
+          right.replaceChildren(movesContainer);
+        } else {
+          left.replaceChildren(movesContainer);
+          right.replaceChildren(dialogContainer);
+        }
+
+
       }
-         
-      function render(){
 
-             const {position = 0 }=state;
-             const indicator = document.getElementById("indicator");
-             const [left, rigth] = document.getElementsByClassName("column");
-             const divArrow = document.createElement("div");
-             divArrow.className="arrow";
+     
 
-            if (position === 0){
-              left.appendChild(divArrow);
+      function play() {
+        const { pokemons = [], position = 0 } = state;
+        const pokemon = pokemons[position];
 
-            }else{
-              rigth.appendChild(divArrow);
+        //move
+        const { newHealth, newPercentage } = calculateSatus(
+          pokemon.health.initial,
+          pokemon.health.current,
+          getRandomNumber(20)
+        );
 
-            }
+        const newBarColor = calculateBarColor(newPercentage);
+        const previousBarColor = pokemon.health.bar;
 
-          
-      }
+        //setState
+        pokemon.health.current = newHealth;
 
-      function play(){
-
-          const {pokemons =[], position =0}= state;
-          const pokemon =pokemons[position];
-
-          //move
-          const {newHealth, newPercentage}  =calculateSatus(
-            pokemon.health.initial,
-            pokemon.health.current,
-            getRandomNumber(50)
-            );
-
-          const newBarColor =calculateBarColor(newPercentage);
-          const previousBarColor=pokemon.health.bar;
-
-          //setState
-          pokemon.health.current = newHealth;
-          
-          
-          console.log(newHealth);
-          console.log(newPercentage);
-          //bar.style.cssText='width:50%';
-          //console.log(bar.getAttribute(""));
+        console.log(newHealth);
+        console.log(newPercentage);
+        //bar.style.cssText='width:50%';
+        //console.log(bar.getAttribute(""));
         // updateUI
-          
 
-          pokemon._ui.bar.setAttribute("style",`width: ${newPercentage}%`);
-          pokemon._ui.bar.classList.remove(previousBarColor);
-          pokemon._ui.bar.classList.add(newBarColor);
-          pokemon._ui.health.textContent = `${pokemon.health.current}/${pokemon.health.initial}`;
+        pokemon._ui.bar.setAttribute("style", `width: ${newPercentage}%`);
+        pokemon._ui.bar.classList.remove(previousBarColor);
+        pokemon._ui.bar.classList.add(newBarColor);
+        pokemon._ui.health.textContent = `${pokemon.health.current}/${pokemon.health.initial}`;
+        state.position = (position + 1) % 2;
+        render();
       }
-  
-     const game =  setInterval(function turn(){
-        
-        const {pokemons =[], position =0}= state;
-        const pokemon =pokemons[position];
+
+      const game = setInterval(function turn() {
+        const { pokemons = [], position = 0 } = state;
+        const pokemon = pokemons[position];
         play();
-        if (pokemon.health.current ===0){
-           clearInterval(game);
+        if (pokemon.health.current === 0) {
+          clearInterval(game);
         }
       }, 1000);
 
       setup();
-
-      
-    
-
     </script>
   </body>
 </html>
