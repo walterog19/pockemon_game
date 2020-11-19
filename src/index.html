@@ -44,7 +44,7 @@
 
     <script>
       //setup
-
+    function game(){  
       function setup() {
         const { pokemons = [] } = state;
         const arena = document.getElementById("arena");
@@ -86,7 +86,7 @@
         const message = "What attack do you want to use?";
         const [dialogContainer, movesContainer] = controls(
           pokemons[position],
-          message
+          message,play
         );
         const panel = document.getElementById("panel");
         const [left, right] = panel.children;
@@ -106,7 +106,7 @@
 
       function play() {
         const { pokemons = [], position = 0 } = state;
-        const pokemon = pokemons[position];
+        const pokemon = pokemons[ (position + 1) % 2];
 
         //move
         const { newHealth, newPercentage } = calculateSatus(
@@ -132,19 +132,35 @@
         pokemon._ui.bar.classList.add(newBarColor);
         pokemon._ui.health.textContent = `${pokemon.health.current}/${pokemon.health.initial}`;
         state.position = (position + 1) % 2;
-        render();
+        if (newHealth>0){
+          state.position=(position + 1) % 2;
+          render();
+        }else{
+          document.getElementById("panel").querySelector(".message").textContent="Winss!!";
+
+          document.getElementById("panel").querySelector(".moves").innerHTML=`
+
+
+          
+          `;
+
+
+
+        }
+        
       }
 
-      const game = setInterval(function turn() {
-        const { pokemons = [], position = 0 } = state;
-        const pokemon = pokemons[position];
-        play();
-        if (pokemon.health.current === 0) {
-          clearInterval(game);
-        }
-      }, 1000);
+      let state ={};
+      window.addEventListener("DOMContentLoaded", (event) => {
+        state = getState();
+        setup();
+        render();
+      });
 
-      setup();
+    }
+
+    game();
+     
     </script>
   </body>
 </html>

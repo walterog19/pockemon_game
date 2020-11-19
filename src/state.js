@@ -1,5 +1,7 @@
 // state
-const state = {
+const getState =  () =>({
+  
+  
     position:0,
     pokemons: [
       {
@@ -74,4 +76,4 @@ const state = {
         },
       },
     ],
-  };
+  });
